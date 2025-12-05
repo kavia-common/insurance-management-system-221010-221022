@@ -26,8 +26,32 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'change-me-in-production')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DJANGO_DEBUG', 'true').lower() == 'true'
 
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '.kavia.ai,localhost,127.0.0.1,testserver').split(',')
+# Allowed hosts can be overridden via env; include localhost and preview domains by default.
+ALLOWED_HOSTS = [
+    h.strip() for h in os.getenv(
+        'DJANGO_ALLOWED_HOSTS',
+        '.kavia.ai,localhost,127.0.0.1,testserver'
+    ).split(',') if h.strip()
+]
 
+# CORS settings: allow specific origins from env; fallback to common local dev URLs.
+# If CORS_ALLOWED_ORIGINS is unset and DEBUG is true, we allow common localhost origins.
+_env_cors = [o.strip() for o in os.getenv(
+    'CORS_ALLOWED_ORIGINS',
+    ''
+).split(',') if o.strip()]
+
+DEFAULT_DEV_CORS = [
+    'http://localhost:3000',
+    'https://localhost:3000',
+    'http://127.0.0.1:3000',
+    'https://127.0.0.1:3000',
+]
+
+CORS_ALLOWED_ORIGINS = _env_cors if _env_cors else (DEFAULT_DEV_CORS if DEBUG else [])
+
+# When explicit origins are given, do not allow-all.
+CORS_ALLOW_ALL_ORIGINS = False if CORS_ALLOWED_ORIGINS else DEBUG
 
 # Application definition
 
@@ -87,11 +111,10 @@ REST_FRAMEWORK = {
     ],
 }
 
-
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 # Ensure a valid Postgres configuration with defaults so NAME is never empty.
-
+# Reads: DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT (default 5001)
 DB_NAME = os.getenv('DB_NAME', 'myapp')
 DB_USER = os.getenv('DB_USER', 'appuser')
 DB_PASSWORD = os.getenv('DB_PASSWORD', 'dbuser123')
@@ -116,7 +139,6 @@ DATABASES = {
     }
 }
 
-
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -135,7 +157,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
@@ -146,7 +167,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
@@ -159,7 +179,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOW_ALL_ORIGINS = True
+# Security/headers and proxy awareness
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 X_FRAME_OPTIONS = 'ALLOWALL'
