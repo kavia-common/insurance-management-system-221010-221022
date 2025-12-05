@@ -90,16 +90,29 @@ REST_FRAMEWORK = {
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+# Ensure a valid Postgres configuration with defaults so NAME is never empty.
+
+DB_NAME = os.getenv('DB_NAME', 'myapp')
+DB_USER = os.getenv('DB_USER', 'appuser')
+DB_PASSWORD = os.getenv('DB_PASSWORD', 'dbuser123')
+DB_HOST = os.getenv('DB_HOST', '127.0.0.1')
+DB_PORT = os.getenv('DB_PORT', '5001')
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', ''),
-        'USER': os.getenv('DB_USER', ''),
-        'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5001'),
+        'NAME': DB_NAME,
+        'USER': DB_USER,
+        'PASSWORD': DB_PASSWORD,
+        'HOST': DB_HOST,
+        'PORT': DB_PORT,
         'CONN_MAX_AGE': int(os.getenv('DB_CONN_MAX_AGE', '60')),
+        'OPTIONS': {
+            # psycopg2-binary driver is provided via requirements.txt.
+            # Keep options minimal and safe by default; allow env override if needed.
+            # Example toggles (commented intentionally):
+            # 'sslmode': os.getenv('DB_SSLMODE', 'prefer'),
+        },
     }
 }
 
