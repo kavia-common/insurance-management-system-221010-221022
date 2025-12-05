@@ -52,9 +52,16 @@ class Claim(TimeStampedModel):
         ("REJECTED", "Rejected"),
         ("CLOSED", "Closed"),
     ]
+    CLAIM_TYPES = [
+        ("ACCIDENT", "Accident"),
+        ("THEFT", "Theft"),
+        ("DAMAGE", "Damage"),
+        ("OTHER", "Other"),
+    ]
     policy = models.ForeignKey(Policy, on_delete=models.CASCADE, related_name="claims")
     claim_number = models.CharField(max_length=64, unique=True)
     incident_date = models.DateField()
+    claim_type = models.CharField(max_length=16, choices=CLAIM_TYPES, default="OTHER")
     description = models.TextField(blank=True)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     status = models.CharField(max_length=16, choices=STATUS_CHOICES, default="OPEN")
